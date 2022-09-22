@@ -1,0 +1,33 @@
+﻿TEXTURA TÍMBRICA
+
+
+
+El archivo .m a ejecutar es:
+
+
+
+- tex_timbrica.m
+
+
+
+El archivo .xlsx generado será guardado en la misma carpeta 'Textura Tímbrica'.
+
+
+
+Nota: Para generar las gráficas de cada una de las tipologías de esta característica, ejecutar los siguientes .m:
+
+
+
+- grafica_atenuacion.m
+
+- grafica_baja_energia.m
+
+- grafica_centroide.m
+
+- grafica_flujo.m
+
+- grafica_MFCC.m
+
+
+
+Teniendo en cuenta dentro de estos archivos: los tiempos y el .xlsx generado anteriormente.

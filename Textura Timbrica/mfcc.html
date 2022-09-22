@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>mfcc.m</title>
+<link rel="stylesheet" type="text/css" href="highlight.css">
+</head>
+<body class="hl">
+<pre class="hl"><span class="hl lin">    1 </span><span class="hl kwa">function</span> <span class="hl opt">[</span> CC<span class="hl opt">,</span> FBE<span class="hl opt">,</span> frames <span class="hl opt">] =</span> <span class="hl kwd">mfcc</span><span class="hl opt">(</span> speech<span class="hl opt">,</span> fs<span class="hl opt">,</span> Tw<span class="hl opt">,</span> Ts<span class="hl opt">,</span> alpha<span class="hl opt">,</span> window<span class="hl opt">,</span> R<span class="hl opt">,</span> M<span class="hl opt">,</span> N<span class="hl opt">,</span> L <span class="hl opt">)</span>
+<span class="hl lin">    2 </span><span class="hl opt">%</span> MFCC Mel frequency cepstral coefficient feature extraction.
+<span class="hl lin">    3 </span><span class="hl opt">%</span>
+<span class="hl lin">    4 </span><span class="hl opt">%</span>   <span class="hl kwd">MFCC</span><span class="hl opt">(</span>S<span class="hl opt">,</span>FS<span class="hl opt">,</span>TW<span class="hl opt">,</span>TS<span class="hl opt">,</span>ALPHA<span class="hl opt">,</span>WINDOW<span class="hl opt">,</span>R<span class="hl opt">,</span>M<span class="hl opt">,</span>N<span class="hl opt">,</span>L<span class="hl opt">)</span> returns mel frequency 
+<span class="hl lin">    5 </span><span class="hl opt">%</span>   cepstral <span class="hl kwd">coefficients</span> <span class="hl opt">(</span>MFCCs<span class="hl opt">)</span> computed from speech signal given 
+<span class="hl lin">    6 </span><span class="hl opt">%</span>   in vector S and sampled at <span class="hl kwd">FS</span> <span class="hl opt">(</span>Hz<span class="hl opt">)</span>. The speech signal is first 
+<span class="hl lin">    7 </span><span class="hl opt">%</span>   preemphasised using a first order FIR filter with preemphasis 
+<span class="hl lin">    8 </span><span class="hl opt">%</span>   coefficient ALPHA. The preemphasised speech signal is subjected 
+<span class="hl lin">    9 </span><span class="hl opt">%</span>   to the short<span class="hl opt">-</span>time Fourier transform analysis with frame durations 
+<span class="hl lin">   10 </span><span class="hl opt">%</span>   of <span class="hl kwd">TW</span> <span class="hl opt">(</span>ms<span class="hl opt">),</span> frame shifts of <span class="hl kwd">TS</span> <span class="hl opt">(</span>ms<span class="hl opt">)</span> and analysis window <span class="hl kwa">function</span> 
+<span class="hl lin">   11 </span><span class="hl opt">%</span>   given as a <span class="hl kwa">function</span> handle in WINDOW. This is followed by magnitude 
+<span class="hl lin">   12 </span><span class="hl opt">%</span>   spectrum computation followed by filterbank design with M triangular 
+<span class="hl lin">   13 </span><span class="hl opt">%</span>   filters uniformly spaced on the mel scale between lower and upper 
+<span class="hl lin">   14 </span><span class="hl opt">%</span>   frequency limits given in <span class="hl kwd">R</span> <span class="hl opt">(</span>Hz<span class="hl opt">)</span>. The filterbank is applied to 
+<span class="hl lin">   15 </span><span class="hl opt">%</span>   the magnitude spectrum values to produce filterbank <span class="hl kwd">energies</span> <span class="hl opt">(</span>FBEs<span class="hl opt">)</span> 
+<span class="hl lin">   16 </span><span class="hl opt">%   (</span>M per frame<span class="hl opt">)</span>. Log<span class="hl opt">-</span>compressed FBEs are then decorrelated using the 
+<span class="hl lin">   17 </span><span class="hl opt">%</span>   discrete cosine transform to produce cepstral coefficients. Final
+<span class="hl lin">   18 </span><span class="hl opt">%</span>   step applies sinusoidal lifter to produce liftered MFCCs that 
+<span class="hl lin">   19 </span><span class="hl opt">%</span>   closely match those produced by HTK <span class="hl opt">[</span><span class="hl num">1</span><span class="hl opt">]</span>.
+<span class="hl lin">   20 </span><span class="hl opt">%</span>
+<span class="hl lin">   21 </span><span class="hl opt">%   [</span>CC<span class="hl opt">,</span>FBE<span class="hl opt">,</span>FRAMES<span class="hl opt">]=</span><span class="hl kwd">MFCC</span><span class="hl opt">(</span>...<span class="hl opt">)</span> also returns FBEs and windowed frames<span class="hl opt">,</span>
+<span class="hl lin">   22 </span><span class="hl opt">%</span>   with feature vectors and frames as columns.
+<span class="hl lin">   23 </span><span class="hl opt">%</span>
+<span class="hl lin">   24 </span><span class="hl opt">%</span>   This framework is based on Dan Ellis<span class="hl str">' rastamat routines [2]. The </span>
+<span class="hl lin">   25 </span><span class="hl str">%   emphasis is placed on closely matching MFCCs produced by HTK [1]</span>
+<span class="hl lin">   26 </span><span class="hl str">%   (refer to p.337 of [1] for HTK'</span>s defaults<span class="hl opt">)</span> with simplicity and 
+<span class="hl lin">   27 </span><span class="hl opt">%</span>   compactness as main considerations<span class="hl opt">,</span> but at a cost of reduced 
+<span class="hl lin">   28 </span><span class="hl opt">%</span>   flexibility. This routine is meant to be easy to extend<span class="hl opt">,</span> and as 
+<span class="hl lin">   29 </span><span class="hl opt">%</span>   a starting point <span class="hl kwa">for</span> work with cepstral coefficients in MATLAB.
+<span class="hl lin">   30 </span><span class="hl opt">%</span>   The triangular filterbank equations are given in <span class="hl opt">[</span><span class="hl num">3</span><span class="hl opt">]</span>.
+<span class="hl lin">   31 </span><span class="hl opt">%</span>
+<span class="hl lin">   32 </span><span class="hl opt">%</span>   Inputs
+<span class="hl lin">   33 </span><span class="hl opt">%</span>           S is the input speech <span class="hl kwd">signal</span> <span class="hl opt">(</span>as vector<span class="hl opt">)</span>
+<span class="hl lin">   34 </span><span class="hl opt">%</span>
+<span class="hl lin">   35 </span><span class="hl opt">%</span>           FS is the sampling <span class="hl kwd">frequency</span> <span class="hl opt">(</span>Hz<span class="hl opt">)</span> 
+<span class="hl lin">   36 </span><span class="hl opt">%</span>
+<span class="hl lin">   37 </span><span class="hl opt">%</span>           TW is the analysis frame <span class="hl kwd">duration</span> <span class="hl opt">(</span>ms<span class="hl opt">)</span> 
+<span class="hl lin">   38 </span><span class="hl opt">%</span> 
+<span class="hl lin">   39 </span><span class="hl opt">%</span>           TS is the analysis frame <span class="hl kwd">shift</span> <span class="hl opt">(</span>ms<span class="hl opt">)</span>
+<span class="hl lin">   40 </span><span class="hl opt">%</span>
+<span class="hl lin">   41 </span><span class="hl opt">%</span>           ALPHA is the preemphasis coefficient
+<span class="hl lin">   42 </span><span class="hl opt">%</span>
+<span class="hl lin">   43 </span><span class="hl opt">%</span>           WINDOW is a analysis window <span class="hl kwa">function</span> handle
+<span class="hl lin">   44 </span><span class="hl opt">%</span> 
+<span class="hl lin">   45 </span><span class="hl opt">%</span>           R is the frequency <span class="hl kwd">range</span> <span class="hl opt">(</span>Hz<span class="hl opt">)</span> <span class="hl kwa">for</span> filterbank analysis
+<span class="hl lin">   46 </span><span class="hl opt">%</span>
+<span class="hl lin">   47 </span><span class="hl opt">%</span>           M is the number of filterbank channels
+<span class="hl lin">   48 </span><span class="hl opt">%</span>
+<span class="hl lin">   49 </span><span class="hl opt">%</span>           N is the number of cepstral coefficients 
+<span class="hl lin">   50 </span><span class="hl opt">%             (</span>including the <span class="hl num">0</span>th coefficient<span class="hl opt">)</span>
+<span class="hl lin">   51 </span><span class="hl opt">%</span>
+<span class="hl lin">   52 </span><span class="hl opt">%</span>           L is the liftering parameter
+<span class="hl lin">   53 </span><span class="hl opt">%</span>
+<span class="hl lin">   54 </span><span class="hl opt">%</span>   Outputs
+<span class="hl lin">   55 </span><span class="hl opt">%</span>           CC is a matrix of mel frequency cepstral coefficients
+<span class="hl lin">   56 </span><span class="hl opt">%              (</span>MFCCs<span class="hl opt">)</span> with feature vectors as columns
+<span class="hl lin">   57 </span><span class="hl opt">%</span>
+<span class="hl lin">   58 </span><span class="hl opt">%</span>           FBE is a matrix of filterbank energies
+<span class="hl lin">   59 </span><span class="hl opt">%</span>               with feature vectors as columns
+<span class="hl lin">   60 </span><span class="hl opt">%</span>
+<span class="hl lin">   61 </span><span class="hl opt">%</span>           FRAMES is a matrix of windowed frames
+<span class="hl lin">   62 </span><span class="hl opt">%                  (</span>one frame per column<span class="hl opt">)</span>
+<span class="hl lin">   63 </span><span class="hl opt">%</span>
+<span class="hl lin">   64 </span><span class="hl opt">%</span>   Example
+<span class="hl lin">   65 </span><span class="hl opt">%</span>           Tw <span class="hl opt">=</span> <span class="hl num">25</span><span class="hl opt">;           %</span> analysis frame <span class="hl kwd">duration</span> <span class="hl opt">(</span>ms<span class="hl opt">)</span>
+<span class="hl lin">   66 </span><span class="hl opt">%</span>           Ts <span class="hl opt">=</span> <span class="hl num">10</span><span class="hl opt">;           %</span> analysis frame <span class="hl kwd">shift</span> <span class="hl opt">(</span>ms<span class="hl opt">)</span>
+<span class="hl lin">   67 </span><span class="hl opt">%</span>           alpha <span class="hl opt">=</span> <span class="hl num">0.97</span><span class="hl opt">;      %</span> preemphasis coefficient
+<span class="hl lin">   68 </span><span class="hl opt">%</span>           R <span class="hl opt">= [</span> <span class="hl num">300 3700</span> <span class="hl opt">];  %</span> frequency range to consider
+<span class="hl lin">   69 </span><span class="hl opt">%</span>           M <span class="hl opt">=</span> <span class="hl num">20</span><span class="hl opt">;            %</span> number of filterbank channels 
+<span class="hl lin">   70 </span><span class="hl opt">%</span>           C <span class="hl opt">=</span> <span class="hl num">13</span><span class="hl opt">;            %</span> number of cepstral coefficients
+<span class="hl lin">   71 </span><span class="hl opt">%</span>           L <span class="hl opt">=</span> <span class="hl num">22</span><span class="hl opt">;            %</span> cepstral sine lifter parameter
+<span class="hl lin">   72 </span><span class="hl opt">%</span>       
+<span class="hl lin">   73 </span><span class="hl opt">%           %</span> hamming <span class="hl kwd">window</span> <span class="hl opt">(</span>see Eq. <span class="hl opt">(</span><span class="hl num">5.2</span><span class="hl opt">)</span> on p<span class="hl num">.73</span> of <span class="hl opt">[</span><span class="hl num">1</span><span class="hl opt">])</span>
+<span class="hl lin">   74 </span><span class="hl opt">%</span>           hamming <span class="hl opt">=</span> &#64;<span class="hl opt">(</span>N<span class="hl opt">)(</span><span class="hl num">0.54</span><span class="hl opt">-</span><span class="hl num">0.46</span><span class="hl opt">*</span><span class="hl kwc">cos</span><span class="hl opt">(</span><span class="hl num">2</span><span class="hl opt">*</span>pi<span class="hl opt">*[</span><span class="hl num">0</span><span class="hl opt">:</span>N<span class="hl opt">-</span><span class="hl num">1</span><span class="hl opt">]</span>.<span class="hl str">'/(N-1)));</span>
+<span class="hl lin">   75 </span><span class="hl str">%       </span>
+<span class="hl lin">   76 </span><span class="hl str">%           % Read speech samples, sampling rate and precision from file</span>
+<span class="hl lin">   77 </span><span class="hl str">%           [ speech, fs, nbits ] = wavread( '</span>sp10.wav<span class="hl str">' );</span>
+<span class="hl lin">   78 </span><span class="hl str">%       </span>
+<span class="hl lin">   79 </span><span class="hl str">%           % Feature extraction (feature vectors as columns)</span>
+<span class="hl lin">   80 </span><span class="hl str">%           [ MFCCs, FBEs, frames ] = ...</span>
+<span class="hl lin">   81 </span><span class="hl str">%                           mfcc( speech, fs, Tw, Ts, alpha, hamming, R, M, C, L );</span>
+<span class="hl lin">   82 </span><span class="hl str">%       </span>
+<span class="hl lin">   83 </span><span class="hl str">%           % Plot cepstrum over time</span>
+<span class="hl lin">   84 </span><span class="hl str">%           figure('</span>Position<span class="hl str">', [30 100 800 200], '</span>PaperPositionMode<span class="hl str">', '</span>auto<span class="hl str">', ... </span>
+<span class="hl lin">   85 </span><span class="hl str">%                  '</span>color<span class="hl str">', '</span>w<span class="hl str">', '</span>PaperOrientation<span class="hl str">', '</span>landscape<span class="hl str">', '</span>Visible<span class="hl str">', '</span>on<span class="hl str">' ); </span>
+<span class="hl lin">   86 </span><span class="hl str">%       </span>
+<span class="hl lin">   87 </span><span class="hl str">%           imagesc( [1:size(MFCCs,2)], [0:C-1], MFCCs ); </span>
+<span class="hl lin">   88 </span><span class="hl str">%           axis( '</span>xy<span class="hl str">' );</span>
+<span class="hl lin">   89 </span><span class="hl str">%           xlabel( '</span>Frame index<span class="hl str">' ); </span>
+<span class="hl lin">   90 </span><span class="hl str">%           ylabel( '</span>Cepstrum index<span class="hl str">' );</span>
+<span class="hl lin">   91 </span><span class="hl str">%           title( '</span>Mel frequency cepstrum<span class="hl str">' );</span>
+<span class="hl lin">   92 </span><span class="hl str">%</span>
+<span class="hl lin">   93 </span><span class="hl str">%   References</span>
+<span class="hl lin">   94 </span><span class="hl str">%</span>
+<span class="hl lin">   95 </span><span class="hl str">%           [1] Young, S., Evermann, G., Gales, M., Hain, T., Kershaw, D., </span>
+<span class="hl lin">   96 </span><span class="hl str">%               Liu, X., Moore, G., Odell, J., Ollason, D., Povey, D., </span>
+<span class="hl lin">   97 </span><span class="hl str">%               Valtchev, V., Woodland, P., 2006. The HTK Book (for HTK </span>
+<span class="hl lin">   98 </span><span class="hl str">%               Version 3.4.1). Engineering Department, Cambridge University.</span>
+<span class="hl lin">   99 </span><span class="hl str">%               (see also: http://htk.eng.cam.ac.uk)</span>
+<span class="hl lin">  100 </span><span class="hl str">%</span>
+<span class="hl lin">  101 </span><span class="hl str">%           [2] Ellis, D., 2005. Reproducing the feature outputs of </span>
+<span class="hl lin">  102 </span><span class="hl str">%               common programs using Matlab and melfcc.m. url: </span>
+<span class="hl lin">  103 </span><span class="hl str">%               http://labrosa.ee.columbia.edu/matlab/rastamat/mfccs.html</span>
+<span class="hl lin">  104 </span><span class="hl str">%</span>
+<span class="hl lin">  105 </span><span class="hl str">%           [3] Huang, X., Acero, A., Hon, H., 2001. Spoken Language </span>
+<span class="hl lin">  106 </span><span class="hl str">%               Processing: A guide to theory, algorithm, and system </span>
+<span class="hl lin">  107 </span><span class="hl str">%               development. Prentice Hall, Upper Saddle River, NJ, </span>
+<span class="hl lin">  108 </span><span class="hl str">%               USA (pp. 314-315).</span>
+<span class="hl lin">  109 </span><span class="hl str">%</span>
+<span class="hl lin">  110 </span><span class="hl str">%   See also EXAMPLE, COMPARE, FRAMES2VEC, TRIFBANK.</span>
+<span class="hl lin">  111 </span><span class="hl str"></span>
+<span class="hl lin">  112 </span><span class="hl str">%   Author: Kamil Wojcicki, September 2011</span>
+<span class="hl lin">  113 </span><span class="hl str"></span>
+<span class="hl lin">  114 </span><span class="hl str"></span>
+<span class="hl lin">  115 </span><span class="hl str">    %% PRELIMINARIES </span>
+<span class="hl lin">  116 </span><span class="hl str"></span>
+<span class="hl lin">  117 </span><span class="hl str">    % Ensure correct number of inputs</span>
+<span class="hl lin">  118 </span><span class="hl str">    if( nargin~= 10 ), help mfcc; return; end; </span>
+<span class="hl lin">  119 </span><span class="hl str"></span>
+<span class="hl lin">  120 </span><span class="hl str">    % Explode samples to the range of 16 bit shorts</span>
+<span class="hl lin">  121 </span><span class="hl str">    if( max(abs(speech))&lt;=1 ), speech = speech * 2^15; end;</span>
+<span class="hl lin">  122 </span><span class="hl str"></span>
+<span class="hl lin">  123 </span><span class="hl str">    Nw = round( 1E-3*Tw*fs );    % frame duration (samples)</span>
+<span class="hl lin">  124 </span><span class="hl str">    Ns = round( 1E-3*Ts*fs );    % frame shift (samples)</span>
+<span class="hl lin">  125 </span><span class="hl str"></span>
+<span class="hl lin">  126 </span><span class="hl str">    nfft = 2^nextpow2( Nw );     % length of FFT analysis </span>
+<span class="hl lin">  127 </span><span class="hl str">    K = nfft/2+1;                % length of the unique part of the FFT </span>
+<span class="hl lin">  128 </span><span class="hl str"></span>
+<span class="hl lin">  129 </span><span class="hl str"></span>
+<span class="hl lin">  130 </span><span class="hl str">    %% HANDY INLINE FUNCTION HANDLES</span>
+<span class="hl lin">  131 </span><span class="hl str"></span>
+<span class="hl lin">  132 </span><span class="hl str">    % Forward and backward mel frequency warping (see Eq. (5.13) on p.76 of [1]) </span>
+<span class="hl lin">  133 </span><span class="hl str">    % Note that base 10 is used in [1], while base e is used here and in HTK code</span>
+<span class="hl lin">  134 </span><span class="hl str">    hz2mel = &#64;( hz )( 1127*log(1+hz/700) );     % Hertz to mel warping function</span>
+<span class="hl lin">  135 </span><span class="hl str">    mel2hz = &#64;( mel )( 700*exp(mel/1127)-700 ); % mel to Hertz warping function</span>
+<span class="hl lin">  136 </span><span class="hl str"></span>
+<span class="hl lin">  137 </span><span class="hl str">    % Type III DCT matrix routine (see Eq. (5.14) on p.77 of [1])</span>
+<span class="hl lin">  138 </span><span class="hl str">    dctm = &#64;( N, M )( sqrt(2.0/M) * cos( repmat([0:N-1].'</span><span class="hl opt">,</span><span class="hl num">1</span><span class="hl opt">,</span>M<span class="hl opt">)</span> ...
+<span class="hl lin">  139 </span>                                       .<span class="hl opt">*</span> <span class="hl kwd">repmat</span><span class="hl opt">(</span>pi<span class="hl opt">*([</span><span class="hl num">1</span><span class="hl opt">:</span>M<span class="hl opt">]-</span><span class="hl num">0.5</span><span class="hl opt">)/</span>M<span class="hl opt">,</span>N<span class="hl opt">,</span><span class="hl num">1</span><span class="hl opt">) ) );</span>
+<span class="hl lin">  140 </span>
+<span class="hl lin">  141 </span>    <span class="hl opt">%</span> Cepstral lifter <span class="hl kwd">routine</span> <span class="hl opt">(</span>see Eq. <span class="hl opt">(</span><span class="hl num">5.12</span><span class="hl opt">)</span> on p<span class="hl num">.75</span> of <span class="hl opt">[</span><span class="hl num">1</span><span class="hl opt">])</span>
+<span class="hl lin">  142 </span>    ceplifter <span class="hl opt">=</span> &#64;<span class="hl opt">(</span> N<span class="hl opt">,</span> L <span class="hl opt">)(</span> <span class="hl num">1</span><span class="hl opt">+</span><span class="hl num">0.5</span><span class="hl opt">*</span>L<span class="hl opt">*</span><span class="hl kwc">sin</span><span class="hl opt">(</span>pi<span class="hl opt">*[</span><span class="hl num">0</span><span class="hl opt">:</span>N<span class="hl opt">-</span><span class="hl num">1</span><span class="hl opt">]/</span>L<span class="hl opt">) );</span>
+<span class="hl lin">  143 </span>
+<span class="hl lin">  144 </span>
+<span class="hl lin">  145 </span>    <span class="hl opt">%%</span> FEATURE EXTRACTION 
+<span class="hl lin">  146 </span>
+<span class="hl lin">  147 </span>    <span class="hl opt">%</span> Preemphasis <span class="hl kwd">filtering</span> <span class="hl opt">(</span>see Eq. <span class="hl opt">(</span><span class="hl num">5.1</span><span class="hl opt">)</span> on p<span class="hl num">.73</span> of <span class="hl opt">[</span><span class="hl num">1</span><span class="hl opt">])</span>
+<span class="hl lin">  148 </span>    speech <span class="hl opt">=</span> <span class="hl kwd">filter</span><span class="hl opt">( [</span><span class="hl num">1</span> <span class="hl opt">-</span>alpha<span class="hl opt">],</span> <span class="hl num">1</span><span class="hl opt">,</span> speech <span class="hl opt">); %</span> <span class="hl kwd">fvtool</span><span class="hl opt">( [</span><span class="hl num">1</span> <span class="hl opt">-</span>alpha<span class="hl opt">],</span> <span class="hl num">1</span> <span class="hl opt">);</span>
+<span class="hl lin">  149 </span>
+<span class="hl lin">  150 </span>    <span class="hl opt">%</span> Framing and <span class="hl kwd">windowing</span> <span class="hl opt">(</span>frames as columns<span class="hl opt">)</span>
+<span class="hl lin">  151 </span>    frames <span class="hl opt">=</span> <span class="hl kwd">vec2frames</span><span class="hl opt">(</span> speech<span class="hl opt">,</span> Nw<span class="hl opt">,</span> Ns<span class="hl opt">,</span> <span class="hl str">'cols'</span><span class="hl opt">,</span> window<span class="hl opt">,</span> false <span class="hl opt">);</span>
+<span class="hl lin">  152 </span>
+<span class="hl lin">  153 </span>    <span class="hl opt">%</span> Magnitude spectrum <span class="hl kwd">computation</span> <span class="hl opt">(</span>as column vectors<span class="hl opt">)</span>
+<span class="hl lin">  154 </span>    MAG <span class="hl opt">=</span> <span class="hl kwc">abs</span><span class="hl opt">(</span> <span class="hl kwd">fft</span><span class="hl opt">(</span>frames<span class="hl opt">,</span>nfft<span class="hl opt">,</span><span class="hl num">1</span><span class="hl opt">) );</span> 
+<span class="hl lin">  155 </span>
+<span class="hl lin">  156 </span>    <span class="hl opt">%</span> Triangular filterbank with uniformly spaced filters on mel scale
+<span class="hl lin">  157 </span>    H <span class="hl opt">=</span> <span class="hl kwd">trifbank</span><span class="hl opt">(</span> M<span class="hl opt">,</span> K<span class="hl opt">,</span> R<span class="hl opt">,</span> fs<span class="hl opt">,</span> hz2mel<span class="hl opt">,</span> mel2hz <span class="hl opt">); %</span> size of H is M x K 
+<span class="hl lin">  158 </span>
+<span class="hl lin">  159 </span>    <span class="hl opt">%</span> Filterbank application to unique part of the magnitude spectrum
+<span class="hl lin">  160 </span>    FBE <span class="hl opt">=</span> H <span class="hl opt">*</span> <span class="hl kwd">MAG</span><span class="hl opt">(</span><span class="hl num">1</span><span class="hl opt">:</span>K<span class="hl opt">,:); %</span> <span class="hl kwd">FBE</span><span class="hl opt">(</span> FBE<span class="hl opt">&lt;</span><span class="hl num">1.0</span> <span class="hl opt">) =</span> <span class="hl num">1.0</span><span class="hl opt">; %</span> apply mel <span class="hl kwc">floor</span>
+<span class="hl lin">  161 </span>
+<span class="hl lin">  162 </span>    <span class="hl opt">%</span> DCT matrix computation
+<span class="hl lin">  163 </span>    DCT <span class="hl opt">=</span> <span class="hl kwd">dctm</span><span class="hl opt">(</span> N<span class="hl opt">,</span> M <span class="hl opt">);</span>
+<span class="hl lin">  164 </span>
+<span class="hl lin">  165 </span>    <span class="hl opt">%</span> Conversion of logFBEs to cepstral coefficients through DCT
+<span class="hl lin">  166 </span>    CC <span class="hl opt">=</span>  DCT <span class="hl opt">*</span> <span class="hl kwc">log</span><span class="hl opt">(</span> FBE <span class="hl opt">);</span>
+<span class="hl lin">  167 </span>
+<span class="hl lin">  168 </span>    <span class="hl opt">%</span> Cepstral lifter computation
+<span class="hl lin">  169 </span>    lifter <span class="hl opt">=</span> <span class="hl kwd">ceplifter</span><span class="hl opt">(</span> N<span class="hl opt">,</span> L <span class="hl opt">);</span>
+<span class="hl lin">  170 </span>
+<span class="hl lin">  171 </span>    <span class="hl opt">%</span> Cepstral liftering gives liftered cepstral coefficients
+<span class="hl lin">  172 </span>    CC <span class="hl opt">=</span> <span class="hl kwd">diag</span><span class="hl opt">(</span> lifter <span class="hl opt">) *</span> CC<span class="hl opt">; % ~</span> HTK<span class="hl str">'s MFCCs</span>
+<span class="hl lin">  173 </span><span class="hl str"></span>
+<span class="hl lin">  174 </span><span class="hl str"></span>
+<span class="hl lin">  175 </span><span class="hl str">% EOF</span>
+</pre>
+</body>
+</html>
+<!--HTML generated by highlight 3.18, http://www.andre-simon.de/-->
