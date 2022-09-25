@@ -1,85 +1,83 @@
+%Definicion de variables
 Tw = 25;                % Duracion de la trama de analisis (ms)
 Ts = 10;                % Cambio de trama de analisis (ms)
 t1= 90;
 t2= 91;
+mat=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
+%Reconocimiento de las canciones
 for i=1:4
 	if (i==1)
-	    wav_file =glob('/home/jestebanza/Aprendizaje/audicion computacional/canciones/bambuco/*.wav');
-	    file1 =glob('/home/jestebanza/Aprendizaje/audicion computacional/canciones/bambuco/*.wav');
-	    w=length(wav_file);
-            vec_caract_bam=zeros(10,w*98);
+		wav_file =glob('Canciones/Bambuco/*.wav');
+		file1 =glob('Canciones/Bambuco/*.wav');
+		w=length(wav_file);
+		vec_caract_pf=zeros(10,w*98);
 	elseif (i==2)
-	    wav_file =glob('/home/jestebanza/Aprendizaje/audicion computacional/canciones/currulao/*.wav');
-	    file2 =glob('/home/jestebanza/Aprendizaje/audicion computacional/canciones/currulao/*.wav');
-	    w=length(wav_file);
-            vec_caract_cur=zeros(10,w*98);
+		wav_file =glob('Canciones/Carranga/*.wav');
+		file2 =glob   ('Canciones/Carranga/*.wav');
+		w=length(wav_file);
+		vec_caract_pv=zeros(10,w*98);
 	elseif(i==3)
-	    wav_file =glob('/home/jestebanza/Aprendizaje/audicion computacional/canciones/joropo/*.wav');
-	    file3 =glob('/home/jestebanza/Aprendizaje/audicion computacional/canciones/joropo/*.wav');
-	    w=length(wav_file);
-            vec_caract_jor=zeros(10,w*98);
-	elseif (i==4)
-	    wav_file =glob('/home/jestebanza/Aprendizaje/audicion computacional/canciones/vallenato/*.wav');
-	    file4 =glob('/home/jestebanza/Aprendizaje/audicion computacional/canciones/vallenato/*.wav');
-	    w=length(wav_file);
-            vec_caract_va=zeros(10,w*98);
+		wav_file =glob('Canciones/Pasillo/*.wav');
+		file3 =glob('Canciones/Pasillo/*.wav');
+		w=length(wav_file);
+		vec_caract_ot=zeros(10,w*98);
 	end
-	
-       for canciones=1:w
-            wav=wav_file(canciones,1);
-            wav=char(wav);
-	    vec_caract = vector_tex_tim(wav,t=[t1 t2],Tw,Ts);
 
-            if    (i==1)
-                 vec_caract_bam =[vec_caract];
-		 vec_caract_bam=vec_caract_bam';
-		 long=size(vec_caract_bam)(1);
- 		for canc= 1:long
- 			printf("%0.10f,",vec_caract_bam(canc,:));   
-			printf("%s",char(wav_file(canciones,1)));
-			printf("%s", ",bambuco"); 
-			printf("\n");
+  %Calculo del vector de caracteristicas
+	for canciones=1:w
+		wav=wav_file(canciones,1);
+		wav=char(wav);
+		vec_caract = vector_tex_tim(wav,t=[t1 t2],Tw,Ts);
+    if (i==1)
+				vec_caract_pf =[vec_caract];
+				vec_caract_pf=vec_caract_pf';
+        vec_caract_pf=[mean(vec_caract_pf),std(vec_caract_pf)];
+        mat_pf(canciones,1:18)=[vec_caract_pf];
+        mat(canciones+1,1:18)=[vec_caract_pf];
+				long=size(vec_caract_pf)(1);
+        filename_bam=sprintf('Graficas/Bambuco/textura_timbrica_b.csv');
+        csvwrite(filename_bam,[mat_pf]);
+			for canc= 1:long
+				printf("%0.10f,",vec_caract_pf(canc,:));
+				printf("%s",char(wav_file(canciones,1)));
+				printf("%s", ",bambuco");
+				printf("\n");
+			end
+		elseif (i==2)
+			vec_caract_pv=[vec_caract];
+			vec_caract_pv=vec_caract_pv';
+      vec_caract_pv=[mean(vec_caract_pv),std(vec_caract_pv)]
+      mat_pv(canciones,1:18)=[vec_caract_pv];
+      mat(canciones+21,1:18)=[vec_caract_pv];
+			long=size(vec_caract_pv)(1);
+      filename_pv=sprintf('Graficas/Carranga/textura_timbrica_c.csv');
+      csvwrite(filename_pv,[mat_pv]);
+			for canc= 1:long
+				printf("%0.10f,",vec_caract_pv(canc,:));
+				printf("%s",char(wav_file(canciones,1)));
+				printf("%s", ",carranga");
+				printf("\n");
+			end
+		elseif (i==3)
+			vec_caract_ot=[vec_caract];
+			vec_caract_ot=vec_caract_ot';
+      vec_caract_ot=[mean(vec_caract_ot),std(vec_caract_ot)]
+      mat_ot(canciones,1:18)=[vec_caract_ot];
+      mat(canciones+41,1:18)=[vec_caract_ot];
+			long=size(vec_caract_ot)(1);
+      filename_ot=sprintf('Graficas/Pasillo/textura_timbrica_p.csv');
+      csvwrite(filename_ot,[mat_ot]);
+			for canc= 1:long
+				printf("%0.10f,",vec_caract_ot(canc,:));
+				printf("%s",char(wav_file(canciones,1)));
+				printf("%s", ",pasillo");
+				printf("\n");
+			end
 		end
-            elseif (i==2)
-                 vec_caract_cur=[vec_caract];
-		 vec_caract_cur=vec_caract_cur';
-		 long=size(vec_caract_cur)(1);
- 		for canc= 1:long
- 			printf("%0.10f,",vec_caract_cur(canc,:));   
-			printf("%s",char(wav_file(canciones,1)));
-			printf("%s", ",currulao");
-			printf("\n");
-		end
-            elseif (i==3)
-                 vec_caract_jor=[vec_caract];
-		 vec_caract_jor=vec_caract_jor';
-		 long=size(vec_caract_jor)(1);
- 		for canc= 1:long
- 			printf("%0.10f,",vec_caract_jor(canc,:));   
-			printf("%s",char(wav_file(canciones,1)));
-			printf("%s", ",joropo");
-			printf("\n");
-		end
-            elseif (i==4)
-                 vec_caract_va=[vec_caract];
-		 vec_caract_va=vec_caract_va';
-		 long=size(vec_caract_va)(1);
- 		for canc= 1:long
- 			printf("%0.10f,",vec_caract_va(canc,:));   
-			printf("%s",char(wav_file(canciones,1)));
-			printf("%s", ",vallenato");
-			printf("\n");
-		end
-             end
-
-       end            
+	end
 end
 
-
-csvwrite('textura_timbrica_bam.csv',[vec_caract_bam]);
-csvwrite('textura_timbrica_cur.csv',[vec_caract_cur]);
-csvwrite('textura_timbrica_jor.csv',[vec_caract_jor]);
-csvwrite('textura_timbrica_va.csv',[vec_caract_va]);
-csvwrite('textura_timbrica.csv',[vec_caract_bam;vec_caract_cur;vec_caract_jor;vec_caract_va]);
-cell2csv('nombres.csv',[file1;file2;file3;file4]);
+%Generacion de los csv
+csvwrite('Clasificadores/vector.csv',[mat]);
+cell2csv('graficas/nombres.csv',[file1;file2;file3]);
