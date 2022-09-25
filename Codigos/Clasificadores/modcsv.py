@@ -1,6 +1,6 @@
 import pandas as pd
 df=pd.read_csv('vector.csv')
-df.columns = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r']
+df.columns = ['mCt','mAe','mFt','mZt','mMFCC1','mMFCC2','mMFCC3','mMFCC4','mMFCC5','stdCt','stdAe','stdFt','stdZt','stdMFCC1','stdMFCC2','stdMFCC3','stdMFCC4','stdMFCC5']
 genero = ['pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_fiestero','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','pasillo_vocal','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro','otro']
 df['genero']=genero
 df.to_csv('vgraficar.csv', index=False)

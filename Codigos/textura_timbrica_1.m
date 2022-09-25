@@ -75,5 +75,5 @@ for i=1:4
 	end
 end
 
-csvwrite('vector.csv',[mat]);
+csvwrite('Clasificadores/vector.csv',[mat]);
 cell2csv('graficas/nombres.csv',[file1;file2;file3]);
