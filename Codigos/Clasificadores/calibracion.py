@@ -27,62 +27,9 @@ from sklearn . metrics import classification_report
 #Leer csv con el vector de caracteristicas
 df=pd.read_csv('vgraficar.csv')
 
-#Informacion del csv
-print(df.head(60))
-print(df.describe())
-print(df.groupby('genero').size())
-print(df.shape)
-
-#Grafica de cajas y bigotes media
-plt.figure(figsize=(15 ,20))
-plt.subplot(9,2,1)
-sns.boxplot(x='genero',y='mCt',data=df)
-plt.subplot(9,2,2)
-sns.boxplot(x='genero',y='mAe',data=df)
-plt.subplot(9,2,3)
-sns.boxplot(x='genero',y='mFt',data=df)
-plt.subplot(9,2,4)
-sns.boxplot(x='genero',y='mZt',data=df)
-plt.subplot(9,2,5)
-sns.boxplot(x='genero',y='mMFCC1',data=df)
-plt.subplot(9,2,6)
-sns.boxplot(x='genero',y='mMFCC2',data=df)
-plt.subplot(9,2,7)
-sns.boxplot(x='genero',y='mMFCC3',data=df)
-plt.subplot(9,2,8)
-sns.boxplot(x='genero',y='mMFCC4',data=df)
-plt.subplot(9,2,9)
-sns.boxplot(x='genero',y='mMFCC5',data=df)
-plt.savefig('cybmean.pdf',dpi=400,bbox_inches='tight',pad_inches=0.1)
-
-#Grafica de cajas y bigotes desviacion estandar
-plt.subplot(9,2,1)
-sns.boxplot(x='genero',y='stdCt',data=df)
-plt.subplot(9,2,2)
-sns.boxplot(x='genero',y='stdAe',data=df)
-plt.subplot(9,2,3)
-sns.boxplot(x='genero',y='stdFt',data=df)
-plt.subplot(9,2,4)
-sns.boxplot(x='genero',y='stdZt',data=df)
-plt.subplot(9,2,5)
-sns.boxplot(x='genero',y='stdMFCC1',data=df)
-plt.subplot(9,2,6)
-sns.boxplot(x='genero',y='stdMFCC2',data=df)
-plt.subplot(9,2,7)
-sns.boxplot(x='genero',y='stdMFCC3',data=df)
-plt.subplot(9,2,8)
-sns.boxplot(x='genero',y='stdMFCC4',data=df)
-plt.subplot(9,2,9)
-sns.boxplot(x='genero',y='stdMFCC5',data=df)
-plt.savefig('cybstd.pdf',dpi=400,bbox_inches='tight',pad_inches=0.1)
-
-#Diagrama de dispersion
-sns.pairplot(df,hue='genero',height=2,diag_kind="kde")
-sns.pairplot(df,hue='genero')
-plt.savefig('dispersion.pdf',dpi =400,bbox_inches='tight',pad_inches=0.1)
-
 #Determinar valores de prueba y de entrenamiento
-X=df[['mCt','mAe','mFt','mZt','mMFCC1','mMFCC2','mMFCC3','mMFCC4','mMFCC5','stdCt','stdAe','stdFt','stdZt','stdMFCC1','stdMFCC2','stdMFCC3','stdMFCC4','stdMFCC5']].values
+#X=df[['mCt','mAe','mFt','mZt','stdCt','stdAe','stdFt','stdZt']].values
+X=df[['mCt','mZt','stdFt','stdZt']].values
 Y=df['genero'].values
 X_train, X_test, y_train, y_test = train_test_split(X, Y, random_state=0)
 scaler = MinMaxScaler()
@@ -127,7 +74,7 @@ ax.matshow(matlda)
 plt.title('Matriz de confusion LDA', fontsize=20)
 for(i,j), z in np.ndenumerate(matlda):
     ax.text(j,i,'{:0.0f}'.format(z), ha='center',va='center')
-plt.savefig('matrizlda.png',dpi =400,bbox_inches='tight',pad_inches=0.1)
+plt.savefig('fmatrizlda.png',dpi =400,bbox_inches='tight',pad_inches=0.1)
 
 #Imprimir matriz de confusion CART
 cart=DecisionTreeClassifier()
@@ -142,7 +89,7 @@ ax.matshow(matcart)
 plt.title('Matriz de confusion CART', fontsize=20)
 for(i,j), z in np.ndenumerate(matlda):
     ax.text(j,i,'{:0.0f}'.format(z), ha='center',va='center')
-plt.savefig('matrizcart.png',dpi =400,bbox_inches='tight',pad_inches=0.1)
+plt.savefig('fmatrizcart.png',dpi =400,bbox_inches='tight',pad_inches=0.1)
 
 #Imprimir matriz de confusion NB
 nb=GaussianNB()
@@ -157,7 +104,7 @@ ax.matshow(matnb)
 plt.title('Matriz de confusion NB', fontsize=20)
 for(i,j), z in np.ndenumerate(matnb):
     ax.text(j,i,'{:0.0f}'.format(z), ha='center',va='center')
-plt.savefig('matriznb.png',dpi =400,bbox_inches='tight',pad_inches=0.1)
+plt.savefig('fmatriznb.png',dpi =400,bbox_inches='tight',pad_inches=0.1)
 
 #Imprimir matriz de confusion SVC
 svc=SVC()
@@ -172,7 +119,7 @@ ax.matshow(matsvc)
 plt.title('Matriz de confusion SVM', fontsize=20)
 for(i,j), z in np.ndenumerate(matsvc):
     ax.text(j,i,'{:0.0f}'.format(z), ha='center',va='center')
-plt.savefig('matrizsvc.png',dpi =400,bbox_inches='tight',pad_inches=0.1)
+plt.savefig('fmatrizsvc.png',dpi =400,bbox_inches='tight',pad_inches=0.1)
 
 #Imprimir matriz de confusion KNN
 knn=KNeighborsClassifier(2)
@@ -187,6 +134,6 @@ ax.matshow(matknn)
 plt.title('Matriz de confusion KNN', fontsize=20)
 for(i,j), z in np.ndenumerate(matknn):
     ax.text(j,i,'{:0.0f}'.format(z), ha='center',va='center')
-plt.savefig('matrizknn.png',dpi =400,bbox_inches='tight',pad_inches=0.1)
+plt.savefig('fmatrizknn.png',dpi =400,bbox_inches='tight',pad_inches=0.1)
 
 
